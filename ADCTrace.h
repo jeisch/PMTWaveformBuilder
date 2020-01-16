@@ -13,6 +13,7 @@ class ADCTrace : public SerialisableObject{
     int Channel;
     uint64_t Start;
     std::vector<uint16_t> Samples;
+    ADCTrace() {}
     ADCTrace(int crate, int card, int channel, uint64_t start, std::vector<uint16_t> samples):Crate(crate), Card(card), Channel(channel), Start(start), Samples(samples) {}
     ~ADCTrace(){}
 

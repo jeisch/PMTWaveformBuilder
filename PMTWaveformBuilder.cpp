@@ -66,14 +66,13 @@ bool PMTWaveformBuilder::Execute(){
       std::vector<DecodedFrame> frames = unpackframes(cdit->Data);
       for (std::vector<DecodedFrame>::iterator dfit = frames.begin() ; dfit != frames.end(); ++dfit) {
         int cid = ((cdit->CardID)*1000)+(dfit->frameid>>24);
-        tempwaves[cid].insert(tempwaves[cid].begin(),dfit->samples.begin(),dfit->samples.end());
+        tempwaves[cid].insert(tempwaves[cid].end(),dfit->samples.begin(),dfit->samples.end());
       }
     }
-    bool first = true;
     for (auto chanit=tempwaves.begin(); chanit!=tempwaves.end(); ++chanit) {
       int cid = chanit->first;
       std::deque<uint16_t> &samples = chanit->second;
-      if (first) cout << "cid: " << cid << endl;
+      cout << "cid: " << cid << endl;
       int last_marker = -1;
       for (unsigned int sit = 0 ; sit != samples.size()-1; ++sit) {
         if (samples[sit] == 0 && samples[sit+1] == 0xFFF) {
@@ -85,21 +84,22 @@ bool PMTWaveformBuilder::Execute(){
             time += (uint64_t)samples[last_marker+5]<<12;
             time += (uint64_t)samples[last_marker+6]<<24;
             time += (uint64_t)samples[last_marker+7]<<36;
-            if (first) cout << "time: " << time*8 << endl;
+            cout << "time: " << time*8 << " len: " << sit-(last_marker+8) << endl;
             int channel = cid%1000;
             int card = ((cid-channel)/1000)%1000;
             int crate = (cid-card*1000-channel)/1000000;
-            std::vector<uint16_t> tempsamples (samples.begin()+last_marker,samples.begin()+sit);
-            traces->emplace(time,ADCTrace(crate,card,channel,time,tempsamples));
+            std::vector<uint16_t> tempsamples (samples.begin()+last_marker+8,samples.begin()+sit);
+            ADCTrace temptrace (crate,card,channel,time,tempsamples);
+            traces->emplace(time,temptrace);
+            cout << "wf: Traces now holds: " << traces->size() << endl;
+            //traces->emplace(time,ADCTrace(crate,card,channel,time,tempsamples));
           }
           last_marker = sit;
         }
       }
       if (last_marker > 0) samples.erase(samples.begin(),samples.begin()+last_marker);
-      //first = false;
     } // tempwave iterator
   }
-  if (traces->size()>1000) m_data->vars.Set("StopLoop",1);
   return true;
 }
 
