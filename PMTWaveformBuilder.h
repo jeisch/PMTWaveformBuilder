@@ -11,6 +11,7 @@
 #include <vector>
 #include <deque>
 #include "ADCTrace.h"
+#include "ADCSync.h"
 
 /**
  * \class PMTWaveformBuilder
@@ -35,7 +36,8 @@ class PMTWaveformBuilder: public Tool {
  private:
   std::unordered_map<int, std::deque<uint16_t>> tempwaves;   
   std::multimap<uint64_t, ADCTrace>* traces;
-
+  std::vector<ADCSync>* syncs;
+  uint64_t fifoerrors;
 
 
 };
